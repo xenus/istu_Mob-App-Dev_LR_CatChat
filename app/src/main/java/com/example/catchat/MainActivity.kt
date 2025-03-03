@@ -3,8 +3,10 @@ package com.example.catchat
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -23,6 +25,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Настройка системных отступов
+        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
+            // Получаем отступы для системных областей (статусная панель, навигационная панель)
+            val systemBars = WindowInsetsCompat.toWindowInsetsCompat(insets).getInsets(WindowInsetsCompat.Type.systemBars())
+            val paddingTop = systemBars.top
+            val paddingBottom = systemBars.bottom
+            // Применяем отступы к корневому элементу макета
+            val rootView = findViewById<View>(R.id.drawer_layout)
+            rootView.setPadding(0, paddingTop, 0, paddingBottom)
+
+            // Возвращаем оригинальные insets (тип WindowInsetsCompat)
+            insets
+        }
+
+        // Настройка Toolbar
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
