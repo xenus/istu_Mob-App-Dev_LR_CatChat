@@ -3,7 +3,10 @@ package com.example.catchat
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -13,14 +16,30 @@ import androidx.navigation.ui.onNavDestinationSelected
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var fab: FloatingActionButton
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
 
+        // Настройка системных отступов
+        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
+            // Получаем отступы для системных областей (статусная панель, навигационная панель)
+            val systemBars = WindowInsetsCompat.toWindowInsetsCompat(insets).getInsets(WindowInsetsCompat.Type.systemBars())
+            val paddingTop = systemBars.top
+            val paddingBottom = systemBars.bottom
+            // Применяем отступы к корневому элементу макета
+            val rootView = findViewById<View>(R.id.drawer_layout)
+            rootView.setPadding(0, paddingTop, 0, paddingBottom)
+
+            // Возвращаем оригинальные insets (тип WindowInsetsCompat)
+            insets
+        }
+
+        // Настройка Toolbar
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -40,6 +59,31 @@ class MainActivity : AppCompatActivity() {
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav)
         bottomNavView.setupWithNavController(navController)
 
+        // Настройка FloatingActionButton
+        fab = findViewById(R.id.fab) // Инициализация FAB
+        fab.setOnClickListener {
+            openComposeEmailScreen()
+        }
+        // Динамическое расположение FAB над BottomNavigationView
+        bottomNavView.viewTreeObserver.addOnGlobalLayoutListener {
+            val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
+            layoutParams.bottomMargin = layoutParams.marginEnd + if (bottomNavView.visibility == View.GONE) 0 else bottomNavView.height
+            fab.layoutParams = layoutParams
+        }
+        // Слушатель навигации для управления видимостью FAB
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if ((destination.id == R.id.helpFragment) or
+                (destination.id == R.id.sentItemsFragment)or
+                (destination.id == R.id.writeFragment)) {
+                bottomNavView.visibility = View.GONE
+            } else {
+                bottomNavView.visibility = View.VISIBLE
+            }
+            when (destination.id) {
+                R.id.writeFragment -> fab.hide() // Скрыть FAB при открытии writeFragment
+                else -> fab.show() // Показать FAB при закрытии writeFragment
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -53,4 +97,9 @@ class MainActivity : AppCompatActivity() {
                 || super.onOptionsItemSelected(item)
     }
 
+    // Логика для открытия экрана написания письма
+    private fun openComposeEmailScreen() {
+        val navController = findNavController(R.id.nav_host_fragment)
+        navController.navigate(R.id.writeFragment) // Укажите ID вашего фрагмента
+    }
 }
