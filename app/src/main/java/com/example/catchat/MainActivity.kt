@@ -67,11 +67,18 @@ class MainActivity : AppCompatActivity() {
         // Динамическое расположение FAB над BottomNavigationView
         bottomNavView.viewTreeObserver.addOnGlobalLayoutListener {
             val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
-            layoutParams.bottomMargin = bottomNavView.height + layoutParams.marginEnd
+            layoutParams.bottomMargin = layoutParams.marginEnd + if (bottomNavView.visibility == View.GONE) 0 else bottomNavView.height
             fab.layoutParams = layoutParams
         }
         // Слушатель навигации для управления видимостью FAB
         navController.addOnDestinationChangedListener { _, destination, _ ->
+            if ((destination.id == R.id.helpFragment) or
+                (destination.id == R.id.sentItemsFragment)or
+                (destination.id == R.id.writeFragment)) {
+                bottomNavView.visibility = View.GONE
+            } else {
+                bottomNavView.visibility = View.VISIBLE
+            }
             when (destination.id) {
                 R.id.writeFragment -> fab.hide() // Скрыть FAB при открытии writeFragment
                 else -> fab.show() // Показать FAB при закрытии writeFragment
